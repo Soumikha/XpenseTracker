@@ -18,3 +18,8 @@ xpense.client/obj/Debug/xpense.client.esproj.FileListAbsolute.txt
 /Xpense.Server/bin
 /Xpense.Server/obj
 *.user
+/.vs
+/Xpense.Server/wwwroot/uploads/Brandys-walmart-receipt-8.png
+/Xpense.Server/wwwroot/uploads/eReceipt.pdf
+/Xpense.Server/wwwroot/uploads/Xpense.wav
+/Xpense.Server/wwwroot/uploads/Xpense.webm

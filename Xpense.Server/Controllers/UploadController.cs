@@ -4,8 +4,9 @@ using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
-
+using Xpense.Server.Models;
 namespace Xpense.Server.Controllers
+
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -15,7 +16,12 @@ namespace Xpense.Server.Controllers
         [HttpPost("UploadFile")]
         public async Task<IActionResult> UploadFile(IFormFile file)
         {
-
+            string itemDescription = "";
+            double? itemTotalPrice = 0.0;
+            double? total = 0.0;
+            string merchantName = "";
+            DateTimeOffset? transactionDate = null;
+            List<LineItem> items = new List<LineItem>();
             //use your `key` and `endpoint` environment variables to create your `AzureKeyCredential` and `DocumentIntelligenceClient` instances
             string key = "9tOCdgXvNnBKSgFAWxckvcwr8SxUsqco8vvI19hfOldeFQlfA9cQJQQJ99BIACYeBjFXJ3w3AAALACOGMiMD";
 ;
@@ -39,54 +45,86 @@ namespace Xpense.Server.Controllers
             {
 
                 Operation<AnalyzeResult> operation = await client.AnalyzeDocumentAsync(WaitUntil.Completed, "prebuilt-receipt", BinaryData.FromStream(stream));
-                AnalyzeResult result = operation.Value;
 
-               
+                AnalyzeResult receipts = operation.Value;
 
-                foreach (DocumentPage page in result.Pages)
+
+
+                // To see the list of the supported fields returned by service and its corresponding types, consult:
+                // https://aka.ms/formrecognizer/receiptfields
+
+                foreach (AnalyzedDocument receipt in receipts.Documents)
                 {
-                    str += $"Document Page {page.PageNumber} has {page.Lines.Count} line(s), {page.Words.Count} word(s),";
-                    str += $"and {page.SelectionMarks.Count} selection mark(s).";
-
-                    for (int i = 0; i < page.Lines.Count; i++)
+                    if (receipt.Fields.TryGetValue("MerchantName", out DocumentField merchantNameField))
                     {
-                        DocumentLine line = page.Lines[i];
-                        str += $"  Line {i} has content: '{line.Content}'.";
+                        if (merchantNameField.FieldType == DocumentFieldType.String)
+                        {
+                             merchantName = merchantNameField.ValueString;
 
-                        //str += $"    Its bounding polygon (points ordered clockwise):";
+                            Console.WriteLine($"Merchant Name: '{merchantName}', with confidence {merchantNameField.Confidence}");
+                        }
+                    }
 
-                        //for (int j = 0; j < line.Polygon.Count; j++)
-                        //{
-                        //    str += $"      Point {j} => X: {line.Polygon[j].X}, Y: {line.Polygon[j].Y}";
-                        //}
+                    if (receipt.Fields.TryGetValue("TransactionDate", out DocumentField transactionDateField))
+                    {
+                        if (transactionDateField.FieldType == DocumentFieldType.Date)
+                        {
+                             transactionDate = transactionDateField.ValueDate;
+
+                            Console.WriteLine($"Transaction Date: '{transactionDate}', with confidence {transactionDateField.Confidence}");
+                        }
+                    }
+
+                    if (receipt.Fields.TryGetValue("Items", out DocumentField itemsField))
+                    {
+                        if (itemsField.FieldType == DocumentFieldType.List)
+                        {
+                            foreach (DocumentField itemField in itemsField.ValueList)
+                            {
+                                Console.WriteLine("Item:");
+
+                                if (itemField.FieldType == DocumentFieldType.Dictionary)
+                                {
+                                    IReadOnlyDictionary<string, DocumentField> itemFields = itemField.ValueDictionary;
+
+                                    if (itemFields.TryGetValue("Description", out DocumentField itemDescriptionField))
+                                    {
+                                        if (itemDescriptionField.FieldType == DocumentFieldType.String)
+                                        {
+                                             itemDescription = itemDescriptionField.ValueString;
+
+                                            //Console.WriteLine($"  Description: '{itemDescription}', with confidence {itemDescriptionField.Confidence}");
+                                        }
+                                    }
+                                  
+                                    if (itemFields.TryGetValue("TotalPrice", out DocumentField itemTotalPriceField))
+                                    {
+                                        if (itemTotalPriceField.FieldType == DocumentFieldType.Currency)
+                                        {
+                                             itemTotalPrice = itemTotalPriceField.ValueCurrency.Amount;
+
+                                            //Console.WriteLine($"  Total Price: '{itemTotalPrice}', with confidence {itemTotalPriceField.Confidence}");
+                                        }
+                                    }
+
+                                    items.Add(new LineItem(itemDescription, itemTotalPrice));
+
+                                }
+                            }
+                        }
+                    }
+
+                    if (receipt.Fields.TryGetValue("Total", out DocumentField totalField))
+                    {
+                        if (totalField.FieldType == DocumentFieldType.Currency)
+                        {
+                             total = totalField.ValueCurrency.Amount;
+
+                            Console.WriteLine($"Total: '{total}', with confidence '{totalField.Confidence}'");
+                        }
                     }
                 }
-
-
-                //foreach (DocumentStyle style in result.Styles)
-                //{
-                //    // Check the style and style confidence to see if text is handwritten.
-                //    // Note that value '0.8' is used as an example.
-
-                //    bool isHandwritten = style.IsHandwritten.HasValue && style.IsHandwritten == true;
-
-                //    if (isHandwritten && style.Confidence > 0.8)
-                //    {
-                //        str += $"Handwritten content found:");
-
-                //        foreach (DocumentSpan span in style.Spans)
-                //        {
-                //            str += $"  Content: {result.Content.Substring(span.Index, span.Length)}");
-                //        }
-                //    }
-                //}
-
-                str += "Detected languages:";
-
-                foreach (DocumentLanguage language in result.Languages)
-                {
-                    str += $"  Found language with locale'{language.Locale}' with confidence {language.Confidence}.";
-                }
+                Expenses expense = new Expenses(merchantName,transactionDate,total,items);
             }
                 return Ok(new { content = str });
             
