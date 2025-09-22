@@ -90,7 +90,7 @@ namespace Xpense.Server.Controllers
         }
         private async Task<string> ConvertWebmToWavAsync(string inputPath, string outputPath)
         {
-            var ffmpegPath = "C:\\Work\\Xpense\\Xpense.Server\\wwwroot\\uploads\\ffmpeg"; // or the full path to ffmpeg.exe if not in PATH
+            var ffmpegPath = "C:\\Work\\XpenseTracker\\Xpense.Server\\wwwroot\\uploads\\ffmpeg"; // or the full path to ffmpeg.exe if not in PATH
             var args = $"-y -i \"{inputPath}\" -acodec pcm_s16le -ac 1 -ar 16000 \"{outputPath}\"";
 
             var process = new System.Diagnostics.Process
