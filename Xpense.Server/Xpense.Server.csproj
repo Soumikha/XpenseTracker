@@ -11,10 +11,13 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.AI.DocumentIntelligence" Version="1.0.0" />
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
+    <PackageReference Include="Azure.Core" Version="1.49.0" />
     <PackageReference Include="Microsoft.AspNetCore.SpaProxy">
       <Version>8.*-*</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.CognitiveServices.Speech" Version="1.45.0" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 

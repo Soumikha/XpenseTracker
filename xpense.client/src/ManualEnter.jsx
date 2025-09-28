@@ -6,10 +6,19 @@ function ManualEnter() {
         let formData = new FormData();
         formData.append("Expense", desc);
 
-        const costInput = document.getElementById("EntCost");
-        const cost = costInput.value;
+        const TcostInput = document.getElementById("EntTotalc");
+        const tcost = TcostInput.value;
+        formData.append("TotalCost", tcost);
 
-        formData.append("Cost", cost);
+        const merchantNameInput = document.getElementById("EntMN");
+        const mn = merchantNameInput.value;
+
+        formData.append("MerchantName", mn);
+
+        const expensedate = document.getElementById("EntEDate");
+        const date = expensedate.value;
+
+        formData.append("ExpenseDate", date);
 
         const response = await fetch("http://localhost:5020/api/Manual/EnterDC", {
             method: "POST",
@@ -17,8 +26,11 @@ function ManualEnter() {
                 "Content-Type": "application/json"  
             },
            body: JSON.stringify({
-                expense: document.getElementById("EntDesc").value,
-                cost: document.getElementById("EntCost").value
+                Expense: document.getElementById("EntDesc").value,
+               Total_Amount: document.getElementById("EntTotalc").value,
+               MerchantName: document.getElementById("EntMN").value,
+               expenseDate: document.getElementById("EntEDate").value
+
             })
         });
 
@@ -31,7 +43,9 @@ function ManualEnter() {
     return (
         <div>
             <input type='text' id='EntDesc' placeholder="Milk" /><br /><br />
-            <input type='text' id='EntCost' placeholder="2.00" /> <br /><br />
+            <input type='text' id='EntTotalc' placeholder="2.00" /> <br /><br />
+            <input type='text' id='EntMN' placeholder="ShopRite" /> <br /><br />
+            <input type='text' id='EntEDate' placeholder="yyyy-mm-dd" /> <br /><br />
             <input type='button' class="btn btn-primary" id='ENTERbttn' value="ENTER" onClick={() => enterDC()} />
 
         </div>
