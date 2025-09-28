@@ -1,13 +1,14 @@
 ﻿using System;
 namespace Xpense.Server.Models
 {
+	[Obsolete]
 	public class LineItem
 	{
-		private string Description
+		public string Description
 		{
 			get; set;
 		}
-		private double? TotalPrice
+		public double? TotalPrice
 		{
 			get; set;
 		}
@@ -16,6 +17,11 @@ namespace Xpense.Server.Models
 			Description = d;
 			TotalPrice = tp;
 	
+		}
+
+		public LineItem()
+		{
+
 		}
 	}
 }

@@ -3,7 +3,9 @@ using Azure.AI.DocumentIntelligence;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using System.Net;
+using Xpense.Server.Helpers;
 using Xpense.Server.Models;
 namespace Xpense.Server.Controllers
 
@@ -21,7 +23,7 @@ namespace Xpense.Server.Controllers
             double? total = 0.0;
             string merchantName = "";
             DateTimeOffset? transactionDate = null;
-            List<LineItem> items = new List<LineItem>();
+            List<ExpenseEntry> items = new List<ExpenseEntry>();
             //use your `key` and `endpoint` environment variables to create your `AzureKeyCredential` and `DocumentIntelligenceClient` instances
             string key = "9tOCdgXvNnBKSgFAWxckvcwr8SxUsqco8vvI19hfOldeFQlfA9cQJQQJ99BIACYeBjFXJ3w3AAALACOGMiMD";
 ;
@@ -107,7 +109,9 @@ namespace Xpense.Server.Controllers
                                         }
                                     }
 
-                                    items.Add(new LineItem(itemDescription, itemTotalPrice));
+                                    
+
+                                    items.Add(new ExpenseEntry(itemDescription, itemTotalPrice,merchantName,transactionDate));
 
                                 }
                             }
@@ -124,9 +128,30 @@ namespace Xpense.Server.Controllers
                         }
                     }
                 }
-                Expenses expense = new Expenses(merchantName,transactionDate,total,items);
+
+                using SqlConnection conn = new SqlConnection("Server=tcp:xtrerversql.database.windows.net,1433;Initial Catalog=XT;Persist Security Info=False;User ID=soumikha;Password=Pass1w0rd!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;");
+                 conn.Open();
+                SqlCommand cmd;
+                for (int i = 0; i < items.Count; i++)
+                {
+                    var categorizedExpense = await CategorizingHelper.CategorizeExpense(items[i]);
+
+                    cmd = new SqlCommand("INSERT INTO expense (item, amount, merchant, expense_date,category,subcategory) VALUES (@item, @amount, @merchant, @expenseDate,@category,@subcategory)", conn);
+                
+                    cmd.Parameters.AddWithValue("@item", items[i].Expense);
+
+                    cmd.Parameters.AddWithValue("@amount", items[i].Total_Amount);
+                    cmd.Parameters.AddWithValue("@merchant", merchantName);
+                    cmd.Parameters.AddWithValue("@expenseDate", transactionDate);
+                    cmd.Parameters.AddWithValue("@Category", categorizedExpense.Category);
+                    cmd.Parameters.AddWithValue("@Subcategory",categorizedExpense.Subcategory);
+                   
+                    cmd.ExecuteNonQuery();
+                }
+                conn.Close();
             }
-                return Ok(new { content = str });
+           
+            return Ok(new { content = str });
             
         }
     }

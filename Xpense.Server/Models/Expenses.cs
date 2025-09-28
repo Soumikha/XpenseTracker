@@ -1,22 +1,25 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 namespace Xpense.Server.Models
 {
+    [Obsolete]
     public class Expenses
     {
-        private string MerchantName
+
+        public string MerchantName
         {
             get; set;
         }
-        private DateTimeOffset? TransactionDate
+        public DateTimeOffset? TransactionDate
         {
             get; set;
         }
-        private double? Total
+        public double? Total
         {
             get; set;
         }
-       
-        private List<LineItem> Items
+
+        public List<LineItem> Items
         {
             get; set;
         }
@@ -29,5 +32,10 @@ namespace Xpense.Server.Models
             Items = items;
         }
 
+        public Expenses()
+        {
+
+
+        }
     }
 }

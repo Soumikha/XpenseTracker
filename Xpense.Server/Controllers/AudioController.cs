@@ -1,21 +1,35 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Azure;
+using Azure.AI.OpenAI;
+using Azure.AI.OpenAI.Chat;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.CognitiveServices.Speech;
 using Microsoft.CognitiveServices.Speech.Audio;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Options;
+using OpenAI.Chat;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Xpense.Server.Helpers;
+using Xpense.Server.Models;
+using Xpense.Server.Models;
+using static System.Environment;
+
 namespace Xpense.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class AudioController : Controller
     {
-
+        string? speechRecognitionResult;
          string speechKey = "9m0orPFGL62agjw8XrtpCoxKUIyJ1fS1rac5wBH23kCLz7FOym8nJQQJ99BIACYeBjFXJ3w3AAAYACOGKcP0";
          Uri endpoint = new Uri("https://eastus.api.cognitive.microsoft.com/");
-
+        string AIkey = "FzklF6aOwl8flThof9rogm6KEqA1QYvEUHJidlWBsrSZQnvhKNgdJQQJ99BIACHYHv6XJ3w3AAAAACOGIY2L";
+        Uri AIendpoint = new Uri("https://soumi-mfwwn6rj-eastus2.openai.azure.com/");
         public static void ValidateWav(string filePath)
         {
             if (!System.IO.File.Exists(filePath))
@@ -48,21 +62,8 @@ namespace Xpense.Server.Controllers
             short blockAlign = br.ReadInt16();
             short bitsPerSample = br.ReadInt16();
 
-            Debug.WriteLine("WAV Info:");
-            Debug.WriteLine($"- File size: {fileSize} bytes");
-            Debug.WriteLine($"- Audio format: {(audioFormat == 1 ? "PCM" : "Other (" + audioFormat + ")")}");
-            Debug.WriteLine($"- Channels: {numChannels}");
-            Debug.WriteLine($"- Sample rate: {sampleRate} Hz");
-            Debug.WriteLine($"- Bits per sample: {bitsPerSample}");
+    
 
-            if (audioFormat != 1 || bitsPerSample != 16 || numChannels != 1 || sampleRate != 16000)
-            {
-                Debug.WriteLine("⚠️ This WAV is not in the recommended format (PCM, 16-bit, 16kHz, mono).");
-            }
-            else
-            {
-                Debug.WriteLine("✅ WAV format looks good.");
-            }
         }
 
         static void OutputSpeechRecognitionResult(SpeechRecognitionResult speechRecognitionResult)
@@ -120,27 +121,17 @@ namespace Xpense.Server.Controllers
             var speechConfig = SpeechConfig.FromEndpoint(endpoint, speechKey);
             speechConfig.SpeechRecognitionLanguage = "en-US";
 
-
-            //using var fileStream = System.IO.File.OpenRead(@"C:\Work\XpenseTracker\Xpense.Server\wwwroot\uploads\Xpense.wav");
-
-            // Create a PushAudioInputStream and write the file data into it
-            //using var pushStream = AudioInputStream.CreatePushStream();
-            //byte[] buffer = new byte[4096];
-            //int bytesRead;
-            //while ((bytesRead = await fileStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
-            //{
-            //    pushStream.Write(buffer,  bytesRead);
-            //}
-            //pushStream.Close();
-
-            // Create AudioConfig from the PushAudioInputStream
-            // using var audioConfig = AudioConfig.FromStreamInput(pushStream);
             ValidateWav(@"C:\Work\XpenseTracker\Xpense.Server\wwwroot\uploads\Xpense.wav");
             using var audioConfig = AudioConfig.FromWavFileInput(@"C:\Work\XpenseTracker\Xpense.Server\wwwroot\uploads\Xpense.wav");
             using var speechRecognizer = new SpeechRecognizer(speechConfig, audioConfig);
-            var speechRecognitionResult = await speechRecognizer.RecognizeOnceAsync();
-            OutputSpeechRecognitionResult(speechRecognitionResult);
-            return speechRecognitionResult;
+            var result = await speechRecognizer.RecognizeOnceAsync();
+            OutputSpeechRecognitionResult(result);
+
+        
+            this.speechRecognitionResult = result.Text;
+            await RunAsync();
+           return result;
+         
         }
 
         [HttpPost("SendAudio")]
@@ -172,6 +163,88 @@ namespace Xpense.Server.Controllers
 
             await sendAudiotoAzure(filePath);
             return Ok($"Audio uploaded successfully at: {filePath}");
+        }
+        
+        private async Task RunAsync()
+        {
+            AzureKeyCredential credential = new AzureKeyCredential(AIkey);
+
+            // Initialize the AzureOpenAIClient
+            AzureOpenAIClient azureClient = new(AIendpoint, credential);
+
+            // Initialize the ChatClient with the specified deployment name
+            ChatClient chatClient = azureClient.GetChatClient("XTgpt-5-mini");
+
+            var messages = new List<ChatMessage>
+            {
+                ChatMessage.CreateSystemMessage(@"
+You are an AI assistant that helps people find information.
+Parse the given text, just give me merchantName, and expense line items and exact date instead of today, yesterday, etc. 
+Give the output as JSON as follows: [{""MerchantName"":""ShopRite"", ""ExpenseDate"":""yyyy-mm-dd"",""Total_Amount"":10.00, ""Expense"":""Paste""}] for every new item add another element in the JSON array"),
+                ChatMessage.CreateUserMessage(speechRecognitionResult),
+            };
+
+            // Create chat completion options
+            var options = new ChatCompletionOptions();
+
+            // <!-- NOTE: this section only needs to be included if max tokens are configured -->
+            // Setting MaxOutputTokenCount requires a temporary workaround using 2.2.0-beta.1
+            // See related:
+            // https://github.com/Azure/azure-sdk-for-net/pull/48218#issuecomment-2652005055
+            //
+          
+
+            try
+            {
+                // Create the chat completion request
+                ChatCompletion completion = await chatClient.CompleteChatAsync(messages, options);
+
+                var jsonoptions = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true, // allows case-insensitive matching
+                    WriteIndented = true
+                };
+                string jsonString = completion.Content[0].Text.Trim(); // or your correct property
+                List<ExpenseEntry> expenses = JsonSerializer.Deserialize<List<ExpenseEntry>>(jsonString, jsonoptions);
+
+                
+                using SqlConnection conn = new SqlConnection("Server=tcp:xtrerversql.database.windows.net,1433;Initial Catalog=XT;Persist Security Info=False;User ID=soumikha;Password=Pass1w0rd!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;");
+                conn.Open();
+                SqlCommand cmd;
+
+                for (int i = 0; i < expenses.Count; i++)
+                {
+                    var categorizedExpense = await CategorizingHelper.CategorizeExpense(expenses[i]);
+
+                    cmd = new SqlCommand("INSERT INTO expense (item, amount, merchant, expense_date,category,subcategory) VALUES (@item, @amount, @merchant, @expenseDate,@category,@subcategory)", conn);
+
+                    cmd.Parameters.AddWithValue("@item", expenses[i].Expense);
+
+                    cmd.Parameters.AddWithValue("@amount", expenses[i].Total_Amount);
+                    cmd.Parameters.AddWithValue("@merchant", expenses[i].MerchantName);
+                    cmd.Parameters.AddWithValue("@expenseDate", expenses[i].ExpenseDate);
+                    cmd.Parameters.AddWithValue("@Category", categorizedExpense.Category);
+                    cmd.Parameters.AddWithValue("@Subcategory", categorizedExpense.Subcategory);
+
+                    cmd.ExecuteNonQuery();
+                }
+                conn.Close();
+            
+                
+                // Print the response
+                if (completion != null)
+                {
+                    Console.WriteLine(JsonSerializer.Serialize(completion, new JsonSerializerOptions() { WriteIndented = true }));
+                }
+                else
+                {
+                    Console.WriteLine("No response received.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+            }
         }
     }
 }
