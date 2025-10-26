@@ -1,4 +1,3 @@
-
 import './App.css';
 import UploadReceipt from './UploadReceipt';
 import ManualEnter from './ManualEnter';
@@ -37,7 +36,7 @@ function UploadCreditStatementAlert() {
                 <div class="collapse navbar-collapse" id="navbarCollapse">
                     <ul class="navbar-nav me-auto mb-2 mb-md-0">
                         <li class="nav-item"> <a class="nav-link active" aria-current="page" href="#">ENTER EXPENSE</a> </li>
-                        <li class="nav-item"> <a class="nav-link" href="#">EXPENSE REPORTS</a> </li>
+                        <li class="nav-item "> <a class="nav-link " href="#">EXPENSE REPORTS</a> </li>
                        
                     </ul>
                  
@@ -45,25 +44,28 @@ function UploadCreditStatementAlert() {
             </div>
         </nav>
         <div class="pricing-header p-3 pb-md-4 mx-auto text-center">
-            <h1 class="display-4 fw-normal text-body-emphasis">ENTER EXPENSE</h1>
+            <h1 class="display-4 fw-normal  page-title">ENTER EXPENSE</h1>
             
-            {viewName === 'mainMenu' && <p class="fs-5 text-body-secondary">Enter your Expense through any of these options.</p>}
+            {viewName === 'mainMenu' && <p class="fs-5  text-uppercase page-description">Enter your Expense through any of these options.</p>}
         </div>
         {viewName === 'mainMenu' &&
             (
                 <div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
                     <div class="col">
-                        <div class="card mb-4 rounded-3 shadow-sm">
-                            <div class="card-header py-3">
-                                <h4 class="my-0 fw-normal">RECIEPT/CREDIT STATEMENT</h4>
-                            </div>
+                        <div class="mb-4 rounded-3 shadow-sm">
+                            {/*<div class="card-header py-3">*/}
+                               
+                            {/*</div>*/}
                             <div class="card-body">
 
-                                <ul class="list-unstyled mt-3 mb-4">
-                                    <li>Upload photo of your receipt/credit statement.</li>
-
-                                </ul>
-                                <button type="button" class="w-100 btn btn-lg btn-outline-primary" onClick={() => UploadReceiptAlert()} >
+                            <div class="d-flex align-items-center mt-3 mb-4">
+                                <img src="./upload.png" width="100" class="me-3"/>
+                                <div>
+                                    <h3 class="my-0 fw-normal text-start card-title">RECIEPT</h3>
+                                    <p class="mb-0 mt-2 text-start card-desc">Upload photo of your receipt/credit statement.</p>
+                                </div>
+                            </div>
+                                <button type="button" class="w-100 btn btn-lg btn-outline-primary card-btn" onClick={() => UploadReceiptAlert()} >
                                     UPLOAD
                                 </button>
                             </div>

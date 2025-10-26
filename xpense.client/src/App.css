@@ -12,5 +12,25 @@ th, td {
 /* Show it's not fixed to the top */
 body {
     min-height: 75rem;
+    background-color: darkblue;
+}
 
+.page-title {
+    color: white;
+    font-family: Georgia;
+}
+
+.page-description {
+    color: white;
+    font-family: Georgia;
+}
+
+.card-title,
+.card-desc {
+    color: white;
+    font-family: Georgia;
+}
+
+.card-btn{
+    background-color: lightgray;
 }
