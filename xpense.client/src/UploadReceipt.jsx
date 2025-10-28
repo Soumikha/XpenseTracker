@@ -27,14 +27,24 @@ function UploadReceipt() {
 
     return (
         <div>
-            <input type='file' id='FLUpload' /><br />
-            <input
-                type='button'
-                id='BTNUPLOAD'
-                value="Upload Receipt"
-                className="btn btn-primary"
-                onClick={uploadFile}
-            />
+            <div class="d-flex flex-column align-items-center mt-3 mb-4">
+                <img src="./up.png" width="350" class="mb-3" />
+
+                <div class="mb-3 text-center">
+                    <label for="FLUpload" class="form-label fw-semibold ">Upload your file</label>
+                    <input class="form-control w-auto mx-auto" type="file" id="FLUpload" />
+
+                </div>
+                <input
+                    type="button"
+                    id="BTNUPLOAD"
+                    value="Upload Receipt"
+                    class="btn btn-primary"
+                    onClick={uploadFile}
+                />
+            </div>
+
+          
         </div>
     );
 }

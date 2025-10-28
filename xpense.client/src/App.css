@@ -12,25 +12,31 @@ th, td {
 /* Show it's not fixed to the top */
 body {
     min-height: 75rem;
-    background-color: darkblue;
+    background-color: #394c60;
 }
 
 .page-title {
     color: white;
-    font-family: Georgia;
+    font-family: 'Segoe UI'
+  
 }
 
 .page-description {
     color: white;
-    font-family: Georgia;
+    font-family: 'Segoe UI'
 }
 
 .card-title,
 .card-desc {
     color: white;
-    font-family: Georgia;
+    font-family: 'Segoe UI'
 }
 
-.card-btn{
-    background-color: lightgray;
+.card-btn {
+    background-color: #ececec;
+    color: #8f8e8e;
 }
+.btn btn-primary border border-3 border-dark {
+    color: darkorange;
+}
+

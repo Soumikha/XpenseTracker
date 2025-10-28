@@ -41,14 +41,47 @@ function ManualEnter() {
        
     }
     return (
-        <div>
-            <input type='text' id='EntDesc' placeholder="Milk" /><br /><br />
-            <input type='text' id='EntTotalc' placeholder="2.00" /> <br /><br />
-            <input type='text' id='EntMN' placeholder="ShopRite" /> <br /><br />
-            <input type='text' id='EntEDate' placeholder="yyyy-mm-dd" /> <br /><br />
-            <input type='button' class="btn btn-primary" id='ENTERbttn' value="ENTER" onClick={() => enterDC()} />
+        <div className="card p-4 w-75 mx-auto mt-4">
+            {/* Card body */}
+            <div className="card-body d-flex flex-column">
+                <input
+                    type="text"
+                    id="EntDesc"
+                    placeholder="Milk"
+                    className="form-control mb-3"
+                />
+                <input
+                    type="text"
+                    id="EntTotalc"
+                    placeholder="2.00"
+                    className="form-control mb-3"
+                />
+                <input
+                    type="text"
+                    id="EntMN"
+                    placeholder="ShopRite"
+                    className="form-control mb-3"
+                />
+                <input
+                    type="text"
+                    id="EntEDate"
+                    placeholder="yyyy-mm-dd"
+                    className="form-control mb-3"
+                />
 
+                {/* ENTER button below all inputs */}
+                <button
+                    type="button"
+                    className="btn btn-primary mt-2"
+                    id="ENTERbttn"
+                    onClick={() => enterDC()}
+                >
+                    ENTER
+                </button>
+            </div>
         </div>
+
+
     );
 }
     export default ManualEnter;

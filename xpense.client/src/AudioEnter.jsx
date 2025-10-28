@@ -68,23 +68,41 @@ const AudioEnter = ({ onAudioSubmit }) => {
 
     return (
         <>
-            <div>
-                <button onClick={recording ? stopRecording : startRecording}>
+            <div className="d-flex flex-column align-items-center mt-4">
+                {/* Image on top */}
+                <img src="./record.png" width="250" className="mb-3"/>
+
+                {/* Record / Stop button */}
+                <button
+                    className={`btn ${recording ? 'btn-danger' : 'btn-success'} mb-3`}
+                    onClick={recording ? stopRecording : startRecording}
+                >
                     {recording ? 'Stop Recording' : 'Start Recording'}
                 </button>
+
+                {/* Show audio controls + upload once recording exists */}
                 {audioUrl && (
                     <>
-                        <div>
-                            <audio controls src={audioUrl}></audio>
-                            <button onClick={resetAudio}>Reset</button>
+                        <div className="d-flex flex-column align-items-center mb-3">
+                            <audio controls src={audioUrl} className="mb-2" />
+                            <button className="btn btn-secondary mb-2" onClick={resetAudio}>
+                                Reset
+                            </button>
                         </div>
 
                         <div>
-                            <input type='button' class="btn btn-primary" id='uploadbttn' value="UPLOAD" onClick={() => handleAudioSubmit(audioBlob)} />
+                            <input
+                                type="button"
+                                id="uploadbttn"
+                                value="Upload"
+                                className="btn btn-primary"
+                                onClick={() => handleAudioSubmit(audioBlob)}
+                            />
                         </div>
                     </>
                 )}
             </div>
+
         </>
     );
 
